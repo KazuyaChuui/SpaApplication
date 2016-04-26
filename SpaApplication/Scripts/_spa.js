@@ -66,6 +66,18 @@ app.controller("employeeController", function ($scope, employeeService) {
 
 app.controller("departmentController", function ($scope, departmentService) {
 
+    $scope.title = '';
+    $scope.errors = [];
+
+    $scope.errorMessage = function (response) {
+        var errors = [];
+        for (var key in response.data.ModelState) {
+            for (var i = 0; i < response.data.ModelState[key].length; i++) {
+                errors.push(response.data.ModelState[key][i]);
+            }
+        }
+        $scope.errors = errors;
+    };
     $scope.departments = departmentService.query();
 
     $scope.department = {
@@ -73,23 +85,43 @@ app.controller("departmentController", function ($scope, departmentService) {
         Name: ''
     };
 
+    $scope.selectDepartment = function (dpmt) {
+        $scope.department = dpmt;
+        $scope.showUpdateDialog();
+        $scope.showAddDialog();
+    };
+
     $scope.deleteDepartment = function (department) {
-        departmentService.remove(department, $scope.refreshData);
+        departmentService.remove(department, $scope.refreshData,$scope.errorMessage);
     };
 
     $scope.refreshData = function () {
         $scope.departments = departmentService.query();
+                $('#modal-dialog').modal('hide');
     };
 
-
-    $scope.showAddDialog = function () {
+    $scope.showUpdateDialog = function () {
+        $scope.title = 'Update department';
         $('#modal-dialog').modal('show');
     };
 
+    $scope.showAddDialog = function () {
+        $scope.clearCurrentDepartment;
+        $scope.clearErrors();
+        $scope.title = 'Add department';
+        $('#modal-dialog').modal('show');
+    };
+
+    $scope.clearErrors = function () {
+        $scope.errors = [];
+    };
+
     $scope.saveDepartment = function () {
-        departmentService.save($scope.department, $scope.refreshData);
-        $('#modal-dialog').modal('hide');
-        $scope.clearCurrentDepartment();
+        if ($scope.department.Id > 0) {
+            departmentService.update($scope.department, $scope.refreshData, $scope.errorMessage);
+        } else {
+            departmentService.save($scope.department, $scope.refreshData, $scope.errorMessage);
+        }
 
     };
 
